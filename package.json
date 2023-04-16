@@ -1,0 +1,23 @@
+{
+  "name": "graph-annptator",
+  "author": "Shubham",
+  "license": "MIT",
+  "version": "0.0.1",
+  "browserslist": [
+    "defaults"
+  ],
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "chart.js": "^4.2.1",
+    "idb": "^7.1.1"
+  },
+  "devDependencies": {
+    "postcss-preset-env": "7.7.2",
+    "vite": "3.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+# ignore data directory
+data/
+
+# ignore node_modules directory
+node_modules/

@@ -26,7 +26,8 @@ async function uploadFile(file, dbName, dbVersion, objectStoreName) {
   }
   const db = await openDB(dbName, dbVersion, {
     upgrade(db) {
-      db.createObjectStore(objectStoreName);
+      const store = db.createObjectStore(objectStoreName);
+      store.createIndex('nameIndex', 'name', { unique: true });
     },
   });
   const upload = {
@@ -35,15 +36,23 @@ async function uploadFile(file, dbName, dbVersion, objectStoreName) {
     type: file.type,
     lastModified: file.lastModified,
     data: file,
+    annotationCount: 0,
   };
   const tx = db.transaction(objectStoreName, 'readwrite');
   const uploadsStore = tx.objectStore(objectStoreName);
-  await uploadsStore.add(upload,file.name)
+  const existingFile = await uploadsStore.get(file.name);
+  if (existingFile) {
+    // If a file with the same name exists, generate a new name
+    const randomString = Math.random().toString(36).substring(2, 5);
+    const newName = `${file.name}-${randomString}`;
+    upload.name = newName;
+    console.log(`File name "${file.name}" already exists, renamed to "${newName}"`);
+  }
 
-  console.log('File uploaded successfully');
+  await uploadsStore.add(upload, upload.name);
+
   return upload;
 }
-
 
 
 /**
@@ -58,7 +67,7 @@ async function uploadFile(file, dbName, dbVersion, objectStoreName) {
  * @param {number} limit - The maximum number of items to return.
  * @returns {Promise<File[]>} - A promise that resolves with an array of files that match the search, sort, and filter criteria.
  */
-async function fetchFiles(dbName, dbVersion, objectStoreName, searchQuery, sortField, sortOrder, offset, limit) {
+async function fetchFiles(dbName, dbVersion, objectStoreName, searchQuery, sortField = false, sortOrder = 'asc', offset = 0, limit = 100) {
   const db = await openDB(dbName, dbVersion);
   const cursor = await createCursor(db, objectStoreName);
   const files = await filterFiles(cursor, searchQuery, limit + offset);
@@ -89,23 +98,22 @@ async function createCursor(db, objectStoreName) {
  * @returns {Promise<File[]>} - A promise that resolves with an array of matching files.
  */
 async function filterFiles(cursor, searchQuery, limit) {
-  const files = [];
+  const items = [];
   let count = 0;
 
   while (cursor && count < limit) {
     const upload = cursor.value;
 
     if (!searchQuery || upload.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      const blob = new Blob([upload.data], { type: upload.type });
-      const file = new File([blob], upload.name, { lastModified: upload.lastModified });
-      files.push(file);
+      // const blob = new Blob([upload.data], { type: upload.type });
+      // const file = new File([blob], upload.name, { lastModified: upload.lastModified });
+      // files.push(file);
+      items.push(upload)
     }
-
     cursor = await cursor.continue();
     count++;
   }
-
-  return files;
+  return items;
 }
 
 /**
@@ -147,4 +155,42 @@ function paginateFiles(files, offset, limit) {
   return files.slice(startIndex, endIndex);
 }
 
-export { uploadFile, fetchFiles }
+async function getKeys(dbName, dbVersion, objectStoreName) {
+  return openDB(dbName, dbVersion).then(function (db) {
+    if (!db.objectStoreNames.contains(objectStoreName)) {
+      return [];
+    }
+
+    var tx = db.transaction(objectStoreName, 'readonly');
+    var store = tx.objectStore(objectStoreName);
+    var request = store.getAllKeys();
+
+    return request.then(function (keys) {
+      return keys;
+    });
+  });
+}
+
+async function fetchFileByName(name, { dbName, dbVersion, objectStoreName }) {
+  if (!name) return;
+  const db = await openDB(dbName, dbVersion, {
+    upgrade(db) {
+      db.createObjectStore(objectStoreName);
+    },
+  });
+
+  const tx = db.transaction(objectStoreName, 'readonly');
+  const uploadsStore = tx.objectStore(objectStoreName);
+  const index = uploadsStore.index('nameIndex');
+  const request = index.get(name);
+  const file = await request;
+
+  if (file) {
+    return file;
+  } else {
+    console.log('File not found');
+    return null;
+  }
+}
+
+export { uploadFile, fetchFiles, fetchFileByName, getKeys }

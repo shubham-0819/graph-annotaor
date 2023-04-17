@@ -1,27 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
-    <title>Vite Preset Env</title>
-    <meta charset="utf-8">
+    <title>Graph Annotator</title>
+    <meta charset="utf-8" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="deeppink" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="Canvas" media="(prefers-color-scheme: dark)">
-    <meta name="description" content="🙂">
-    <meta name="color-scheme" content="dark light">
-    <link rel="stylesheet" href="/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="theme-color"
+      content="deeppink"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="Canvas"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta name="description" content="🙂" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    
     <main>
       <canvas id="canvas" height="600" width="600"></canvas>
-      <input id="file-upload-btn" type="file">
+      <input id="file-upload-btn" type="file" />
+      <button id="fetch-files-btn">Fetch files</button>
     </main>
 
     <script>
-      const canvas= document.getElementById("canvas");
-      canvas.width = canvas.parentElement.offsetWidth;
+      setTimeout(() => {
+        const canvas = document.getElementById("canvas");
+        canvas.width = canvas.parentElement.offsetWidth;
+      }, 100);
     </script>
     <script type="module" src="/src/index.js"></script>
   </body>
